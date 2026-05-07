@@ -1,59 +1,59 @@
+import { libData } from "@/lib/data";
+
 // Mock content service
-
 export const getAllContent = async () => {
-
-    await new Promise(resolve => setTimeout(resolve, 500))
-
-    return [
-
-        { id: 1, title: 'Math Lesson 1', subject: 'Math', status: 'approved', teacherId: 'teacher1', description: 'Basic algebra', startTime: '2023-01-01T10:00', endTime: '2023-01-01T11:00', rotationDuration: 30 },
-
-        { id: 2, title: 'Science Experiment', subject: 'Science', status: 'pending', teacherId: 'teacher1', description: 'Chemistry lab', startTime: '2023-01-02T10:00', endTime: '2023-01-02T12:00', rotationDuration: 60 },
-
-        { id: 3, title: 'History Lecture', subject: 'History', status: 'rejected', teacherId: 'teacher2', description: 'World War II', startTime: '2023-01-03T09:00', endTime: '2023-01-03T10:00', rotationDuration: 45, rejectionReason: 'Inappropriate content' }
-
-    ]
-
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return libData;
 }
 
 export const getContentByTeacher = async (teacherId) => {
-
     const all = await getAllContent()
-
     return all.filter(c => c.teacherId === teacherId)
-
 }
 
 export const uploadContent = async (data) => {
-
     await new Promise(resolve => setTimeout(resolve, 1000))
-
-    return { id: Date.now(), ...data, status: 'pending' }
-
+    libData.push({
+        id: libData.length + 1,
+        title: data.title,
+        subject: data.subject,
+        status: 'pending',
+        teacherId: data.teacherId,
+        startTime: data.startTime,
+        endTime: data.endTime,
+        rotationDuration: data.rotationDuration || "",
+        description: data.description || ""
+    });
+    return { id: Date.now(), ...data, status: 'pending' };
 }
 
 export const approveContent = async (id) => {
-
     await new Promise(resolve => setTimeout(resolve, 500))
-
+    libData[id - 1].status = 'approved';
     return { success: true }
-
 }
 
 export const rejectContent = async (id, reason) => {
-
     await new Promise(resolve => setTimeout(resolve, 500))
+    libData[id - 1].status = 'rejected';
+    libData[id - 1].rejectionReason = reason.toString();
 
     return { success: true }
-
 }
 
 export const getLiveContent = async (teacherId) => {
-
     const all = await getAllContent()
-
     const now = new Date()
-
     return all.filter(c => c.teacherId === teacherId && new Date(c.startTime) <= now && new Date(c.endTime) >= now && c.status === 'approved')
-
 }
+
+
+
+
+
+
+
+
+
+
+//creating an ai model that can be trained by human entire life and at end the human dies and the model is what that human was  a mimic of that human

@@ -1,0 +1,284 @@
+===============================================
+CONTENT BROADCASTING SYSTEM - FRONTEND NOTES
+===============================================
+
+PROJECT STRUCTURE
+=================
+frontend/
+├── src/
+│   ├── app/                    # Next.js app directory (file-based routing)
+│   │   ├── layout.jsx          # Root layout with Navbar and Providers
+│   │   ├── page.jsx            # Landing page (redirects based on auth)
+│   │   ├── login/page.jsx      # Login page
+│   │   ├── [teacherId]/        # Teacher dashboard routes (protected)
+│   │   │   ├── layout.jsx      # Layout with ProtectedRoute (role: teacherId)
+│   │   │   ├── page.jsx        # Teacher dashboard with stats
+│   │   │   ├── upload/page.jsx # Content upload form
+│   │   │   └── content/        # Teacher's content list (TODO: Implement)
+│   │   ├── principal/          # Principal dashboard routes (protected)
+│   │   │   ├── layout.jsx      # Layout with ProtectedRoute (role: principal)
+│   │   │   ├── page.jsx        # Principal dashboard with stats
+│   │   │   ├── approvals/page.jsx # Pending content approvals
+│   │   │   └── content/page.jsx   # All content with filters
+│   │   └── live/
+│   │       └── [teacherId]/page.jsx # Public live content page
+│   ├── components/             # Reusable UI components
+│   │   ├── Navbar.jsx          # Navigation bar with logout
+│   │   ├── ProtectedRoute.jsx  # Route protection wrapper
+│   │   └── ui/                 # shadcn/ui components
+│   │       ├── badge.jsx
+│   │       ├── button.jsx
+│   │       ├── card.jsx
+│   │       ├── input.jsx
+│   │       ├── label.jsx
+│   │       ├── select.jsx
+│   │       └── textarea.jsx
+│   ├── context/
+│   │   └── AuthContext.jsx     # Auth state + content caching
+│   ├── services/               # API call abstraction layer
+│   │   ├── auth.service.jsx    # Authentication (mock)
+│   │   └── content.service.jsx # Content CRUD operations (mock)
+│   └── lib/
+│       ├── data.js             # Mock database (cache storage)
+│       └── utils.jsx           # Utility functions
+├── package.json                # Dependencies & scripts
+├── tailwind.config.mjs          # Tailwind CSS configuration
+└── next.config.mjs             # Next.js configuration
+
+
+AUTHENTICATION FLOW
+===================
+1. User enters email & password on login page
+2. auth.service.login() validates credentials (mock)
+3. If valid:
+   - Returns { token, role } where role = "teacher1", "teacher2", or "principal"
+   - Token stored in localStorage
+   - User object set in AuthContext { email, role }
+4. On page refresh:
+   - AuthContext calls verifyToken() to restore user session
+   - If valid token, user object restored; if invalid, redirected to login
+5. Logout clears token and user state
+
+
+ROLE-BASED ROUTING
+==================
+Teacher Routes:
+  - /teacher1, /teacher2, etc. (dynamic [teacherId] routes)
+  - Protected by ProtectedRoute with role matching teacherId
+  - Example: Only user with role="teacher1" can access /teacher1/*
+
+Principal Routes:
+  - /principal/* (static routes)
+  - Protected by ProtectedRoute with role="principal"
+
+Public Routes:
+  - /login (no protection)
+  - /live/:teacherId (no protection, public viewing)
+  - / (redirects based on auth state)
+
+Protection Mechanism:
+  - ProtectedRoute component checks if user.role === required role
+  - If not authorized, redirects to /login
+  - Displays loading state while auth status is being verified
+
+
+API INTEGRATION APPROACH
+========================
+Service Layer Architecture:
+  ✓ No direct API calls in components
+  ✓ All API logic centralized in services/ folder
+  ✓ Services are easily replaceable with real backend
+  ✓ Mock delays simulate real-world latency
+
+Current Services:
+  1. auth.service.jsx
+     - login(email, password) → { token, role }
+     - verifyToken(token) → { email, role }
+     - logout()
+
+  2. content.service.jsx
+     - getAllContent() → array of all content
+     - getContentByTeacher(teacherId) → teacher's content
+     - uploadContent(data) → returns uploaded content
+     - approveContent(id) → updates status to "approved"
+     - rejectContent(id, reason) → updates status to "rejected"
+     - getLiveContent(teacherId) → currently active approved content
+
+API Response Format:
+  - Content object: { id, title, subject, description, teacherId, startTime, 
+                      endTime, rotationDuration, status, rejectionReason? }
+  - Status values: "pending" | "approved" | "rejected"
+
+
+STATE MANAGEMENT APPROACH
+=========================
+Tool: React Context API (createContext + useContext)
+Reason: Small-to-medium project, no complex nested state
+
+AuthContext stores:
+  - user: { email, role } | null
+  - loading: boolean (auth initialization state)
+  - stats: { total, pending, approved, rejected } (teacher dashboard cache)
+  - allStats: { total, pending, approved, rejected } (principal dashboard cache)
+  - content: array (teacher's content cache)
+  - allContent: array (all content cache for principal)
+  - login(email, password) → async function
+  - logout() → function
+  - resetContext() → clears all caches (called after create/update/delete)
+
+Caching Logic:
+  - If data exists in context, skip API call
+  - After any mutation (upload, approve, reject), resetContext() is called
+  - Components check if cache is null before fetching
+  - Prevents unnecessary API calls during same session
+
+
+IMPLEMENTATION STATUS
+=====================
+✅ IMPLEMENTED:
+  - Authentication (login/logout/token verification)
+  - Role-based route protection
+  - Teacher dashboard with stats
+  - Principal dashboard with stats
+  - Content upload form with validation
+  - File validation (JPG, PNG, GIF; max 10MB)
+  - Time validation (endTime > startTime)
+  - Pending approvals page (approve/reject)
+  - All content page with filters (status + search)
+  - Live content page (/live/:teacherId)
+  - Loading states in all pages
+  - Empty states for no content
+  - Error handling with try-catch
+  - Navbar with logout
+  - Service layer architecture
+  - Mock database (lib/data.js)
+
+⚠️ KNOWN ISSUES:
+  1. ProtectedRoute Logic Bug:
+     - Condition has duplicate role check: "user.role !== role || user.role !== role"
+     - Should be: "!user || user.role !== role"
+     - Impact: May not properly reject unauthorized access
+
+  2. Token Verification Bug:
+     - verifyToken() only recognizes "teacher-token" and "principal-token"
+     - login() returns "teacher1-token", "teacher2-token", etc.
+     - Impact: Teachers cannot restore session after page refresh
+     - Fix: verifyToken() needs to handle teacher-specific tokens
+
+  3. Data Mapping Bug in uploadContent:
+     - startTime and endTime are swapped when storing
+     - Code: startTime: data.endTime, endTime: data.startTime (line 16-17)
+     - Impact: Content scheduling times are reversed
+
+  4. No Professional Rejection Workflow:
+     - Uses browser prompt() instead of modal
+     - Not user-friendly for longer rejection reasons
+
+❌ NOT IMPLEMENTED:
+  - Teacher's "My Content" page (/[teacherId]/content)
+  - Form validation with React Hook Form (installed but unused)
+  - Form validation with Zod (installed but unused)
+  - Skeleton loaders (mentioned as preferred)
+  - Toast notifications
+  - File preview in approval page
+  - Rejection reason modal (using prompt instead)
+  - React Query/TanStack Query for data fetching
+  - Pagination for large lists
+  - Component memoization
+  - Dark mode
+  - Drag-and-drop upload
+  - Auto-refresh/polling
+  - PropTypes validation
+
+
+ASSUMPTIONS
+===========
+1. Teacher Identification:
+   - Teacher role format: "teacher1", "teacher2", "teacher3", etc.
+   - Teacher ID in URL matches their role
+   - Example: Teacher with role="teacher1" accesses /teacher1/*
+
+2. Mock Database:
+   - lib/data.js serves as in-memory database
+   - Data persists during session but resets on page reload
+   - Real backend would replace this with actual database
+
+3. Time Scheduling:
+   - Uses ISO string format: "2023-01-01T10:00"
+   - Content is "active" if current time is between startTime and endTime
+   - No complex timezone handling
+
+4. File Uploads:
+   - Only accepts JPG, PNG, GIF (image files)
+   - Mock service stores file reference, not actual file
+   - Real backend would handle file storage (AWS S3, etc.)
+
+5. Approval Workflow:
+   - Rejection reason is text-only (no file attachments)
+   - Admin can only approve/reject, not edit content
+
+6. Student Access:
+   - /live/:teacherId is public (no authentication required)
+   - Students see only approved, currently-active content
+   - No student login or history tracking
+
+
+DEPLOYMENT CONSIDERATIONS
+=========================
+Frontend Setup:
+  1. npm install (install dependencies)
+  2. npm run dev (development server on http://localhost:3000)
+  3. npm run build (production build)
+  4. npm run start (production server)
+
+Environment Variables (if using real backend):
+  - NEXT_PUBLIC_API_URL: Backend API endpoint
+  - NEXT_PUBLIC_API_TIMEOUT: Request timeout (ms)
+
+For Real Backend Integration:
+  1. Replace mock services with actual API calls
+  2. Update auth.service.jsx to call real login endpoint
+  3. Update content.service.jsx to call real CRUD endpoints
+  4. Replace localStorage token with secure HTTP-only cookies
+  5. Add proper error handling for network failures
+  6. Implement token refresh logic
+  7. Add request/response interceptors with axios
+
+Current Limitations:
+  - No real file storage
+  - No real database
+  - No real authentication
+  - All data resets on page reload
+  - Mock delays hardcoded (not configurable)
+
+
+TECH STACK
+==========
+- Framework: Next.js 16.1.1 (React 19.2.3)
+- Styling: Tailwind CSS 4
+- UI Components: shadcn/ui
+- Form Handling: React Hook Form 7.75.0 (installed, not used)
+- Validation: Zod 4.1.12 (installed, not used)
+- HTTP Client: Axios 1.16.0
+- Language: JavaScript (ES6+)
+- CSS: Tailwind + CSS Modules
+- Linting: ESLint 9
+
+
+NEXT STEPS / RECOMMENDATIONS
+=============================
+1. Fix ProtectedRoute logic bug (remove duplicate condition)
+2. Fix token verification for teacher-specific tokens
+3. Fix startTime/endTime swap in uploadContent
+4. Implement React Hook Form + Zod validation
+5. Implement "My Content" page for teachers
+6. Implement professional modal for rejection reasons
+7. Add skeleton loaders for better UX
+8. Add toast notifications for success/error feedback
+9. Implement pagination for large content lists
+10. Add file preview in approval page
+11. Integrate real backend API
+12. Add PropTypes validation
+13. Implement error boundaries
+14. Add retry logic for failed API calls
+15. Implement proper loading/error states with user feedback

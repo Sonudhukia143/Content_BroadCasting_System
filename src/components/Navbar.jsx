@@ -18,7 +18,7 @@ export const Navbar = () => {
     return null
   }
 
-  const dashboardLink = user.role === 'teacher' ? '/teacher/dashboard' : '/principal/dashboard'
+  const dashboardLink = user.role === 'teacher' ? '/' : '/principal'
 
   return (
     <nav className="bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg">
@@ -35,7 +35,7 @@ export const Navbar = () => {
 
           <div className="flex items-center space-x-4">
             <span className="text-sm font-medium">
-              {user.role === 'teacher' ? '👨‍🏫 Teacher' : '👔 Principal'}
+              {user.role === 'principal' ? '👔 Principal' : '👨‍🏫 Teacher'}
             </span>
             <Button
               onClick={handleLogout}

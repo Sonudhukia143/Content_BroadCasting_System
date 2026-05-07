@@ -1,13 +1,15 @@
 // providers/Providers.tsx
 "use client";
 import { AuthProvider } from "@/context/AuthContext.jsx";
+import { ToastProvider, ToastContainer } from "@/components/toast.jsx";
 
 export function Providers({ children }) {
     return (
         <AuthProvider>
-
-            {children}
-
-        </AuthProvider >
+            <ToastProvider>
+                {children}
+                <ToastContainer />
+            </ToastProvider>
+        </AuthProvider>
     );
 }

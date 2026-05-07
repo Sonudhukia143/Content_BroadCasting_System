@@ -1,47 +1,35 @@
-'use client'
-
+'use client';
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/context/AuthContext.jsx'
 import { getAllContent } from '@/services/content.service.jsx'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { Button } from '@/components/ui/button.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
 import { Input } from '@/components/ui/input.jsx'
 import { Select } from '@/components/ui/select.jsx'
-import { Navbar } from '@/components/Navbar.jsx'
+import { useAuth } from '@/context/AuthContext';
 
 export default function AllContentPage() {
-  const { user, loading: authLoading } = useAuth()
-  const router = useRouter()
-  const [allContent, setAllContent] = useState([])
   const [filtered, setFiltered] = useState([])
   const [statusFilter, setStatusFilter] = useState('')
   const [search, setSearch] = useState('')
-  const [loading, setLoading] = useState(true)
+  const { allContent, setAllContent } = useAuth();
+  const [contentLoading, setLoading] = useState(allContent ? false : true);
 
   useEffect(() => {
-    if (!authLoading && (!user || user.role !== 'principal')) {
-      router.push('/login')
-      return
-    }
-
-    if (user) {
+    if (allContent === null)
       getAllContent()
         .then(setAllContent)
         .finally(() => setLoading(false))
-    }
-  }, [user, authLoading, router])
+  }, [allContent, setAllContent]);
 
   useEffect(() => {
-    let result = allContent
-    if (statusFilter) {
-      result = result.filter(c => c.status === statusFilter)
-    }
-    if (search) {
-      result = result.filter(c => c.title.toLowerCase().includes(search.toLowerCase()))
-    }
+    let result = allContent || [];
+    // console.log(result)
+    if (statusFilter) result = result.filter(c => c.status === statusFilter);
+
+    if (search) result = result.filter(c => c.title.toLowerCase().includes(search.toLowerCase()));
+
     setFiltered(result)
   }, [allContent, statusFilter, search])
 
@@ -51,13 +39,10 @@ export default function AllContentPage() {
     if (status === 'rejected') return <Badge variant="danger">✗ Rejected</Badge>
   }
 
-  if (authLoading || loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>
-  }
+  if (contentLoading) return <div className="flex items-center justify-center h-screen">Loading...</div>
 
   return (
     <>
-      <Navbar />
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="mb-8 flex justify-between items-center">
@@ -65,7 +50,7 @@ export default function AllContentPage() {
               <h1 className="text-4xl font-bold text-gray-900 mb-2">All Content</h1>
               <p className="text-gray-600">Browse and filter all submitted content</p>
             </div>
-            <Link href="/principal/dashboard">
+            <Link href="/principal">
               <Button variant="outline">← Back</Button>
             </Link>
           </div>
@@ -113,7 +98,7 @@ export default function AllContentPage() {
                     {item.description && (
                       <p className="text-sm text-gray-600">{item.description}</p>
                     )}
-                    
+
                     <div className="text-xs text-gray-500 space-y-1 bg-gray-50 rounded p-2">
                       <p><strong>Teacher:</strong> {item.teacherId}</p>
                       <p>📅 Start: {new Date(item.startTime).toLocaleString()}</p>
