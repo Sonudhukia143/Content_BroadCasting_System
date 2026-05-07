@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { getAllContent } from '@/services/content.service.jsx'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
@@ -10,28 +10,26 @@ import { Select } from '@/components/ui/select.jsx'
 import { useAuth } from '@/context/AuthContext';
 
 export default function AllContentPage() {
-  const [filtered, setFiltered] = useState([])
   const [statusFilter, setStatusFilter] = useState('')
   const [search, setSearch] = useState('')
   const { allContent, setAllContent } = useAuth();
   const [contentLoading, setLoading] = useState(allContent ? false : true);
 
   useEffect(() => {
-    if (allContent === null)
-      getAllContent()
-        .then(setAllContent)
-        .finally(() => setLoading(false))
+    if (allContent !== null) return; // already loaded
+    getAllContent()
+      .then(c => setAllContent(c))
+      .finally(() => setLoading(false));
   }, [allContent, setAllContent]);
 
-  useEffect(() => {
-    let result = allContent || [];
-    // console.log(result)
+  // Compute filtered directly – no extra state, no effect
+  const filtered = useMemo(() => {
+    if (!allContent) return [];
+    let result = allContent;
     if (statusFilter) result = result.filter(c => c.status === statusFilter);
-
     if (search) result = result.filter(c => c.title.toLowerCase().includes(search.toLowerCase()));
-
-    setFiltered(result)
-  }, [allContent, statusFilter, search])
+    return result;
+  }, [allContent, statusFilter, search]);
 
   const getStatusBadge = (status) => {
     if (status === 'approved') return <Badge variant="success">✓ Approved</Badge>

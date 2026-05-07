@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { getAllContent, approveContent, rejectContent } from '@/services/content.service'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/components/toast'
 import { RejectionModal } from '@/components/RejectionModal'
 import { ContentListSkeleton } from '@/components/skeletons'
+import { useRouter } from 'next/navigation'
 
 export default function ApprovalsPage() {
   const { allContent, setAllContent, resetContext } = useAuth();
@@ -15,17 +16,24 @@ export default function ApprovalsPage() {
   const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
   const [selectedContentId, setSelectedContentId] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     if (allContent === null)
       getAllContent()
-        .then(all => setAllContent(all.filter(c => c.status === 'pending')))
+        .then(setAllContent)
         .catch(err => {
           addToast('Failed to load pending content', 'error');
           console.error(err);
         })
         .finally(() => setLoading(false));
-  }, [setAllContent, allContent, resetContext, addToast]);
+
+  }, [setAllContent, allContent, addToast]);
+
+  const pendingContent = useMemo(() => {
+    if (!allContent) return [];
+    return allContent.filter(c => c.status === 'pending');
+  }, [allContent]);
 
   const handleApprove = async (id) => {
     setIsProcessing(true);
@@ -39,6 +47,7 @@ export default function ApprovalsPage() {
       console.error(err);
     } finally {
       setIsProcessing(false);
+      router.push('/principal')
     }
   };
 
@@ -62,6 +71,8 @@ export default function ApprovalsPage() {
       console.error(err);
     } finally {
       setIsProcessing(false);
+      // console.log(allContent); ///./////
+      router.push('/principal')
     }
   };
 
@@ -91,7 +102,7 @@ export default function ApprovalsPage() {
 
           {/* Content List */}
           <div className="space-y-4">
-            {allContent && allContent.length === 0 ? (
+            {pendingContent && pendingContent.length === 0 ? (
               <Card className="border-0 shadow-lg">
                 <CardContent className="pt-12">
                   <div className="text-center">
@@ -102,7 +113,7 @@ export default function ApprovalsPage() {
                 </CardContent>
               </Card>
             ) : (
-              allContent?.map(item => (
+              pendingContent?.map(item => (
                 <Card key={item.id} className="border-0 shadow-lg hover:shadow-xl transition-shadow border-l-4 border-yellow-500 bg-yellow-50">
                   <CardHeader>
                     <div className="flex justify-between items-start gap-4">

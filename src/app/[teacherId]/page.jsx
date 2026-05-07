@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button.jsx'
 import { Badge } from '@/components/ui/badge.jsx'
 import { useAuth } from '@/context/AuthContext';
 import { useParams } from 'next/navigation';
+// import { libData } from '@/lib/data';
 
 export default function TeacherDashboard() {
     const { teacherId } = useParams();
@@ -27,9 +28,7 @@ export default function TeacherDashboard() {
                 .finally(() => setDashboardLoading(false))
     }, [stats, setStats]);
 
-    if (dashboardLoading) {
-        return <div className="flex items-center justify-center h-screen">Loading...</div>
-    }
+    if (dashboardLoading) return <div className="flex items-center justify-center h-screen">Loading...</div>
 
     return (
         <>

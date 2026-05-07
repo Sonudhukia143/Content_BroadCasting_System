@@ -29,5 +29,15 @@ export const libData = [
         endTime: '2023-01-03T10:00',
         rotationDuration: 45,
         rejectionReason: 'Inappropriate content'
+    },
+    {
+        id: 3, title: 'Punjabi Lecture',
+        subject: 'Punjabi',
+        status: 'approved',
+        teacherId: 'teacher2',
+        description: 'Guru Nanak Bal Katha',
+        startTime: '2026-01-03T09:00',
+        endTime: '2026-10-10T10:00',
+        rotationDuration: 45,
     }
 ]

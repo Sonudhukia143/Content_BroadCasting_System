@@ -12,7 +12,8 @@ export const getContentByTeacher = async (teacherId) => {
 }
 
 export const uploadContent = async (data) => {
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log(data);
     libData.push({
         id: libData.length + 1,
         title: data.title,
@@ -24,13 +25,15 @@ export const uploadContent = async (data) => {
         rotationDuration: data.rotationDuration || "",
         description: data.description || ""
     });
+
+    // console.log(libData);
     return { id: Date.now(), ...data, status: 'pending' };
 }
 
 export const approveContent = async (id) => {
     await new Promise(resolve => setTimeout(resolve, 500))
     libData[id - 1].status = 'approved';
-    return { success: true }
+    return { success: true };
 }
 
 export const rejectContent = async (id, reason) => {

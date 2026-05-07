@@ -18,7 +18,7 @@ import { useAuth } from '@/context/AuthContext';
 export default function UploadPage() {
   const router = useRouter();
   const { teacherId } = useParams();
-  const { resetContext } = useAuth();
+  const { resetContext, user } = useAuth();
   const { addToast } = useToast();
   const [filePreview, setFilePreview] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -54,22 +54,9 @@ export default function UploadPage() {
     setIsSubmitting(true);
     try {
       resetContext();
-
-      // Prepare the data for API
-      const formData = new FormData();
-      formData.append('title', data.title);
-      formData.append('subject', data.subject);
-      formData.append('description', data.description || '');
-      formData.append('file', data.file);
-      formData.append('startTime', data.startTime);
-      formData.append('endTime', data.endTime);
-      formData.append('teacherId', teacherId);
-      formData.append('rotationDuration', data.rotationDuration || 0);
-
-      await uploadContent(formData);
-
+      await uploadContent({ ...data, teacherId: user.role });
       addToast('Content uploaded successfully! Redirecting...', 'success', 1000);
-      setTimeout(() => router.push(`/${teacherId}`), 1500);
+      setTimeout(() => router.push(`/${teacherId}`), 500);
     } catch (err) {
       addToast('Failed to upload content. Please try again.', 'error');
       console.error('Upload error:', err);

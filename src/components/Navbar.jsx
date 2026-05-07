@@ -1,5 +1,4 @@
-'use client'
-
+'use client';
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext.jsx'
@@ -18,19 +17,21 @@ export const Navbar = () => {
     return null
   }
 
-  const dashboardLink = user.role === 'teacher' ? '/' : '/principal'
+  const dashboardLink = user.role === 'principal' ? '/principal' : `/${user.role}`
 
   return (
     <nav className="bg-gradient-to-r from-blue-600 to-blue-800 text-white shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
+
             <Link href={dashboardLink} className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
                 <span className="font-bold text-blue-600">CB</span>
               </div>
               <span className="font-bold text-xl">Content Broadcast</span>
             </Link>
+
           </div>
 
           <div className="flex items-center space-x-4">

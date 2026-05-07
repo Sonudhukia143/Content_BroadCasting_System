@@ -2,7 +2,7 @@
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 export default function Layout({ children }) {
-    return <ProtectedRoute role='principal'>
+    return (<ProtectedRoute role='principal'>
         {children}
-    </ProtectedRoute>
+    </ProtectedRoute>)
 }

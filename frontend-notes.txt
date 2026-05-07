@@ -153,42 +153,6 @@ IMPLEMENTATION STATUS
   - Service layer architecture
   - Mock database (lib/data.js)
 
-⚠️ KNOWN ISSUES:
-  1. ProtectedRoute Logic Bug:
-     - Condition has duplicate role check: "user.role !== role || user.role !== role"
-     - Should be: "!user || user.role !== role"
-     - Impact: May not properly reject unauthorized access
-
-  2. Token Verification Bug:
-     - verifyToken() only recognizes "teacher-token" and "principal-token"
-     - login() returns "teacher1-token", "teacher2-token", etc.
-     - Impact: Teachers cannot restore session after page refresh
-     - Fix: verifyToken() needs to handle teacher-specific tokens
-
-  3. Data Mapping Bug in uploadContent:
-     - startTime and endTime are swapped when storing
-     - Code: startTime: data.endTime, endTime: data.startTime (line 16-17)
-     - Impact: Content scheduling times are reversed
-
-  4. No Professional Rejection Workflow:
-     - Uses browser prompt() instead of modal
-     - Not user-friendly for longer rejection reasons
-
-❌ NOT IMPLEMENTED:
-  - Teacher's "My Content" page (/[teacherId]/content)
-  - Form validation with React Hook Form (installed but unused)
-  - Form validation with Zod (installed but unused)
-  - Skeleton loaders (mentioned as preferred)
-  - Toast notifications
-  - File preview in approval page
-  - Rejection reason modal (using prompt instead)
-  - React Query/TanStack Query for data fetching
-  - Pagination for large lists
-  - Component memoization
-  - Dark mode
-  - Drag-and-drop upload
-  - Auto-refresh/polling
-  - PropTypes validation
 
 
 ASSUMPTIONS
@@ -231,10 +195,6 @@ Frontend Setup:
   3. npm run build (production build)
   4. npm run start (production server)
 
-Environment Variables (if using real backend):
-  - NEXT_PUBLIC_API_URL: Backend API endpoint
-  - NEXT_PUBLIC_API_TIMEOUT: Request timeout (ms)
-
 For Real Backend Integration:
   1. Replace mock services with actual API calls
   2. Update auth.service.jsx to call real login endpoint
@@ -263,22 +223,3 @@ TECH STACK
 - Language: JavaScript (ES6+)
 - CSS: Tailwind + CSS Modules
 - Linting: ESLint 9
-
-
-NEXT STEPS / RECOMMENDATIONS
-=============================
-1. Fix ProtectedRoute logic bug (remove duplicate condition)
-2. Fix token verification for teacher-specific tokens
-3. Fix startTime/endTime swap in uploadContent
-4. Implement React Hook Form + Zod validation
-5. Implement "My Content" page for teachers
-6. Implement professional modal for rejection reasons
-7. Add skeleton loaders for better UX
-8. Add toast notifications for success/error feedback
-9. Implement pagination for large content lists
-10. Add file preview in approval page
-11. Integrate real backend API
-12. Add PropTypes validation
-13. Implement error boundaries
-14. Add retry logic for failed API calls
-15. Implement proper loading/error states with user feedback
